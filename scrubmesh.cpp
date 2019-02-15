@@ -5,8 +5,7 @@
 #include <algorithm>
 #include <string>
 #include <iostream>
-#include <list>
-#include <iterator>
+#include <vector>
 
 
 
@@ -32,25 +31,13 @@ USAGE:
     return EXIT_FAILURE;
   }
  
-  // Use a list so that meshes are _not_ contiguous in memory
-  list<MatrixXd> Vlist(argc-1,MatrixXd());
-  list<MatrixXi> Flist(argc-1,MatrixXi());
+  vector<MatrixXd> Vlist(argc-1,MatrixXd());
+  vector<MatrixXi> Flist(argc-1,MatrixXi());
   vector<std::string> filename_list(argc-1);
   // Read files in parallel
   const int n = argc-1;
   {
-    vector<list<MatrixXd>::iterator> Viters;
-    vector<list<MatrixXi>::iterator> Fiters;
     const double tic = igl::get_seconds();
-    auto Viter = Vlist.begin();
-    auto Fiter = Flist.begin();
-    for(int i = 0;i<n;i++)
-    {
-      Viters.push_back(Viter);
-      Viter++;
-      Fiters.push_back(Fiter);
-      Fiter++;
-    }
     int error = EXIT_SUCCESS;
     std::cout<<std::endl;
     igl::parallel_for(n,[&](const int i)
@@ -59,7 +46,7 @@ USAGE:
       const auto & filename = argv[i+1];
       std::cout<<clear_line<<"\rLoading "<<filename<<"..."<<std::flush;
       filename_list[i] = filename;
-      if(!igl::read_triangle_mesh(filename,*Viters[i],*Fiters[i]))
+      if(!igl::read_triangle_mesh(filename,Vlist[i],Flist[i]))
       {
         error = EXIT_FAILURE;
       }
@@ -73,8 +60,6 @@ USAGE:
   assert(Vlist.size() == n);
   assert(Flist.size() == n);
   int index = 0;
-  auto Viter = Vlist.begin();
-  auto Fiter = Flist.begin();
 
   igl::opengl::glfw::Viewer v;
   std::cout<<R"(scrubmesh
@@ -90,47 +75,33 @@ USAGE:
   const auto update = [&]()
   {
     v.data().clear();
-    v.data().set_mesh(*Viter,*Fiter);
+    v.data().set_mesh(Vlist[index],Flist[index]);
     v.data().compute_normals();
     if(realign_camera_on_update)
     {
-      v.core.align_camera_center(*Viter,*Fiter);
+      v.core.align_camera_center(Vlist[index],Flist[index]);
     }
     std::cout<<clear_line<<filename_list[index]<< std::flush;
     last_update_t = igl::get_seconds();
   };
   const auto increment = [&]()
   {
-    assert(Vlist.size() == Flist.size());
     index++;
-    assert(std::next(Viter) != Vlist.end());
-    Viter++;
-    assert(std::next(Fiter) != Flist.end());
-    Fiter++;
     update();
   };
   const auto rewind = [&]()
   {
     index = 0;
-    Viter = Vlist.begin();
-    Fiter = Flist.begin();
     update();
   };
   const auto fast_forward = [&]()
   {
     index = n-1;
-    Viter = std::prev(Vlist.end());
-    Fiter = std::prev(Flist.end());
     update();
   };
   const auto decrement = [&]()
   {
-    assert(Vlist.size() == Flist.size());
     index--;
-    assert(Viter != Vlist.begin());
-    Viter--;
-    assert(Fiter!= Flist.begin());
-    Fiter--;
     update();
   };
 
@@ -158,8 +129,6 @@ USAGE:
     case 'p':
       {
         const int index_copy = index;
-        const auto Viter_copy = Viter;
-        const auto Fiter_copy = Fiter;
         rewind();
         for(int i = 0;i<n;i++)
         {
@@ -178,8 +147,6 @@ USAGE:
         }
         std::cout<<clear_line;
         index = index_copy;
-        Viter = Viter_copy;
-        Fiter = Fiter_copy;
         update();
         break;
       }
