@@ -39,9 +39,6 @@ int main(int argc, char * argv[])
       cerr<<R"(
 USAGE:
   meshstatistics input.[mesh|msh|obj|off|ply|stl|wrl]
-
-  Note: .ply and .stl outputs are binary.
-  Note: all meshes interpreted as triangles meshes.
 )";
     return EXIT_FAILURE;
   }
@@ -256,7 +253,10 @@ USAGE:
   printf("%-53s % 12g\n","minimum area",                                     min_area);
   printf("%-53s % 12g\n","maximum area",                                     max_area);
   printf("%-53s % 12g\n","volume",                                           volume);
-  printf("%-39s % 3g,% 3g,% 3g\n","centroid",                                centroid(0),centroid(1),centroid(2));
+  //printf("%-39s % 3g,% 3g,% 3g\n","centroid",                                centroid(0),centroid(1),centroid(2));
+  printf("%-53s % 12g\n","centroid_x",                                       centroid(0));
+  printf("%-53s % 12g\n","centroid_y",                                       centroid(1));
+  printf("%-53s % 12g\n","centroid_z",                                       centroid(2));
   // Small things                                                  
   printf("%-53s % 12d\n","number of small triangles",                        num_small_triangles);
   printf("%-53s % 12d\n","number of small angles   ",                        num_small_angles);
