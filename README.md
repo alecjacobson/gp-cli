@@ -16,6 +16,12 @@ or
 
     convertmesh /path/of/directories/until/folder/containing/mymesh.{off,obj}
 
+## `meshboolean`
+
+Compute the set union, intersection, difference etc. of two meshes. E.g.,
+
+    meshboolean A.obj B.obj union C.obj
+
 ## `meshstatistics`
 
 Compute statistics about a given mesh. E.g., 
