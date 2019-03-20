@@ -86,6 +86,24 @@ Visualize any libigl-readable mesh using the default libigl viewer. E.g.,
 
     viewmesh input.obj
 
+## Precompiled binaries
+
+Located in `precompiled/[system]/bin/`.
+
+ - For Mac OS X: [precompiled/osx/bin](precompiled/osx/bin)
+ - For Linux (Ubuntu): [precompiled/linux/bin](precompiled/linux/bin)
+ - For PC (Windows): [precompiled/pc/bin](precompiled/pc/bin)
+
+## Build from source
+
+Follow the usual cmake build process:
+
+    mkdir build
+    cd build
+    cmake ../
+    make
+    make install
+
 ## License
 
 Free for academic, non-commercial use. Contact Alec Jacobson
