@@ -79,6 +79,10 @@ Scrub through a sequence/animation of meshes
 or into an `.mp4` using
 
     ffmpeg -f image2 -i ./scrubmesh-%06d.png -vcodec libx264 -pix_fmt yuv420p -q:vscale 0 scrubmesh.mp4
+    
+**_Hint_**: On shell systems, to interleave two animations from different directories `A/` and `B/` you could use:
+
+    scrubmesh `(find A/*.obj | cat -n ; find B/*.obj | cat -n  )  | sort -n  | cut -f2- `
 
 ## `viewmesh`
 
