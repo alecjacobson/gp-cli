@@ -74,7 +74,11 @@ USAGE:
 
   const auto update = [&]()
   {
-    v.data().clear();
+    //// .clear() has a bunch of other side-effects (e.g., "resetting"
+    //// face_based, etc.)
+    //v.data().clear();
+    v.data().V.resize(0,3);
+    v.data().F.resize(0,3);
     v.data().set_mesh(Vlist[index],Flist[index]);
     v.data().compute_normals();
     if(realign_camera_on_update)
