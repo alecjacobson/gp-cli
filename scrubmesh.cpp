@@ -1,7 +1,7 @@
+#include "draw_frame_to_png.h"
 #include <igl/read_triangle_mesh.h>
 #include <igl/opengl/glfw/Viewer.h>
 #include <igl/parallel_for.h>
-#include <igl/png/writePNG.h>
 #include <algorithm>
 #include <string>
 #include <iostream>
@@ -83,7 +83,7 @@ USAGE:
     v.data().compute_normals();
     if(realign_camera_on_update)
     {
-      v.core.align_camera_center(Vlist[index],Flist[index]);
+      v.core().align_camera_center(Vlist[index],Flist[index]);
     }
     std::cout<<clear_line<<filename_list[index]<< std::flush;
     last_update_t = igl::get_seconds();
@@ -118,8 +118,8 @@ USAGE:
       return false;
     case 'A':
     case 'a':
-      v.core.is_animating ^= 1;
-      if(v.core.is_animating)
+      v.core().is_animating ^= 1;
+      if(v.core().is_animating)
       {
         last_update_t = igl::get_seconds();
       }
@@ -136,17 +136,7 @@ USAGE:
         rewind();
         for(int i = 0;i<n;i++)
         {
-          char png_filename[512];
-          sprintf(png_filename,"./scrubmesh-%06d.png",i);
-          std::cout<<" --> "<<png_filename<<"..."<<std::flush;
-          // Allocate temporary buffers
-          const int w = v.core.viewport(2);
-          const int h = v.core.viewport(3);
-          Matrix<unsigned char,Dynamic,Dynamic> R(w,h), G(w,h), B(w,h), A(w,h);
-          // Draw the scene in the buffers
-          v.core.draw_buffer(v.data(),false,R,G,B,A);
-          // Save it to a PNG
-          igl::png::writePNG(R,G,B,A,png_filename);
+          draw_frame_to_png("./scrubmesh-",i,v);
           if(i+1<n) increment();
         }
         std::cout<<clear_line;
@@ -182,7 +172,7 @@ USAGE:
 
   v.callback_pre_draw = [&](igl::opengl::glfw::Viewer &)->bool
   {
-    if(v.core.is_animating)
+    if(v.core().is_animating)
     {
       const double now = igl::get_seconds();
       if( (now-last_update_t) > 1./fps )
@@ -213,7 +203,7 @@ USAGE:
 
   // Prepare a line so that we can overwrite it with each update
   std::cout<<std::endl;
-  //v.core.is_animating = true;
+  //v.core().is_animating = true;
   update();
   v.launch();
   // New line so that shell is reset

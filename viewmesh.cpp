@@ -1,3 +1,4 @@
+#include "draw_frame_to_png.h"
 #include <igl/read_triangle_mesh.h>
 #include <igl/opengl/glfw/Viewer.h>
 #include <algorithm>
@@ -43,6 +44,15 @@ or
       }
       v.data().set_mesh(V,F);
       v.data().set_colors(CM.row((i-1)%CM.rows()));
+      // Point cloud as points
+      if(F.rows() == 0)
+      {
+        if(V.rows()>100)
+        {
+          v.data().point_size = 3;
+        }
+        v.data().set_points(V,CM.row((i-1)%CM.rows()));
+      }
       if(i==CM.rows())
       {
         std::cerr<<"Warning: #meshes ("<<argc<<") > #colors ("<<CM.rows()<<
@@ -57,6 +67,26 @@ or
       v.append_mesh();
     }
   }
+  v.callback_key_pressed = 
+    [&](igl::opengl::glfw::Viewer& /*viewer*/, unsigned int key, int mod)->bool
+  {
+    switch(key)
+    {
+      default:
+        return false;
+      case 'P':
+      case 'p':
+      {
+        static int index = 0;
+        draw_frame_to_png("./viewmesh-",index++,v);
+        std::cout<<std::endl;
+        return true;
+      }
+    }
+  };
+  std::cout<<R"(scrubmesh
+  P,p  write screenshots to ./viewmesh-%06d.png
+)";
   v.launch();
   return EXIT_SUCCESS;
 }
