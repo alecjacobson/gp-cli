@@ -16,6 +16,19 @@ or
 
     convertmesh /path/of/directories/until/folder/containing/mymesh.{off,obj}
 
+## `decimate`
+
+Decimate a model using quadric error metrics simplification. E.g.,
+
+    decimate 0.1 input.ply output.obj
+
+## `mergestl`
+
+Merge triangle soup contained in a `.stl` file into a triangle mesh (that can be
+stored in `.obj` etc.). E.g.,
+
+    mergestl model.{stl,obj}
+
 ## `meshboolean`
 
 Compute the set union, intersection, difference etc. of two meshes. E.g.,
