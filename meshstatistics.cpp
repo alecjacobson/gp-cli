@@ -84,6 +84,7 @@ USAGE:
       return EXIT_FAILURE;
     }
   }
+  printf("%-9s %56s\n","filename",                                         in.c_str());
   // V,T,F have been set
   
   const int num_vertices = V.rows();
@@ -98,6 +99,58 @@ USAGE:
     Eigen::MatrixXi _1;
     sort(E,2,true,sortE,_1);
   }
+
+  // Basic Counts
+  printf("%-53s % 12d\n","number of edges",                                  num_edges);
+  printf("%-53s % 12d\n","number of faces",                                  num_faces);
+  printf("%-53s % 12d\n","number of vertices",                               num_vertices);
+  printf("%-53s % 12d\n","number of dimensions",                             dim);
+
+  const double bbd = (V.colwise().maxCoeff()- V.colwise().minCoeff()).norm();
+  const double small_area = 1e-7*2.*bbd*bbd;
+  Eigen::VectorXd A;
+  doublearea(V,F,A);
+  const int num_small_triangles = (A.array()<=small_area).count();
+  const double max_area = A.maxCoeff()/2.0;
+  const double min_area = A.minCoeff()/2.0;
+  const double small_angle = 0.01;
+  Eigen::MatrixXd Phi;
+  internal_angles(V,F,Phi);
+  const int num_small_angles = (Phi.array()<=small_angle).count();
+  const double max_angle = Phi.maxCoeff();
+  const double min_angle = Phi.minCoeff();
+  Eigen::RowVector3d centroid;
+  double volume;
+  igl::centroid(V,F,centroid,volume);
+
+  // Sizes                                                  
+  printf("%-53s % 12g\n","bounding box diagonal",                            bbd);
+  printf("%-53s % 12g\n","minimum angle",                                    min_angle);
+  printf("%-53s % 12g\n","maximum angle",                                    max_angle);
+  printf("%-53s % 12g\n","minimum area",                                     min_area);
+  printf("%-53s % 12g\n","maximum area",                                     max_area);
+  printf("%-53s % 12g\n","volume",                                           volume);
+  //printf("%-39s % 3g,% 3g,% 3g\n","centroid",                                centroid(0),centroid(1),centroid(2));
+  printf("%-53s % 12g\n","centroid_x",                                       centroid(0));
+  printf("%-53s % 12g\n","centroid_y",                                       centroid(1));
+  printf("%-53s % 12g\n","centroid_z",                                       centroid(2));
+
+  const double close_dist = 1e-7;
+  const auto num_duplicate_up_to = [&](const double tol)->int
+  {
+    Eigen::MatrixXd VV;
+    Eigen::VectorXi _1,_2;
+    remove_duplicate_vertices(V,tol,VV,_1,_2);
+    return num_vertices - VV.rows();
+  };
+  const int num_close_vertices = num_duplicate_up_to(close_dist*bbd);
+  const int num_duplicate_vertices = num_duplicate_up_to(0);
+
+  // Small things                                                  
+  printf("%-53s % 12d\n","number of small triangles",                        num_small_triangles);
+  printf("%-53s % 12d\n","number of small angles   ",                        num_small_angles);
+  printf("%-53s % 12d\n","number of close vertices",                         num_close_vertices);
+
   Eigen::SparseMatrix<int> DA;
   sparse(
     sortE.col(0),
@@ -137,37 +190,10 @@ USAGE:
   vertex_components(BA,BC,Bcounts);
   const int num_boundary_loops = (Bcounts.array()>1).count();
 
-
   //// Don't count boundary edges (where "redirected" edge only occured once).
   //Eigen::VectorXi OAI,OAJ,OAV;
   //find(OA,OAI,OAJ,OAV);
 
-
-
-  Eigen::VectorXd A;
-  doublearea(V,F,A);
-  const double bbd = (V.colwise().maxCoeff()- V.colwise().minCoeff()).norm();
-  const double small_area = 1e-7*2.*bbd*bbd;
-  const int num_small_triangles = (A.array()<=small_area).count();
-  const double max_area = A.maxCoeff()/2.0;
-  const double min_area = A.minCoeff()/2.0;
-  const double small_angle = 0.01;
-  Eigen::MatrixXd Phi;
-  internal_angles(V,F,Phi);
-  const int num_small_angles = (Phi.array()<=small_angle).count();
-  const double max_angle = Phi.maxCoeff();
-  const double min_angle = Phi.minCoeff();
-
-  const double close_dist = 1e-7;
-  const auto num_duplicate_up_to = [&](const double tol)->int
-  {
-    Eigen::MatrixXd VV;
-    Eigen::VectorXi _1,_2;
-    remove_duplicate_vertices(V,tol,VV,_1,_2);
-    return num_vertices - VV.rows();
-  };
-  const int num_close_vertices = num_duplicate_up_to(close_dist*bbd);
-  const int num_duplicate_vertices = num_duplicate_up_to(0);
   Eigen::SparseMatrix<int> VA;
   adjacency_matrix(F,VA);
   Eigen::VectorXi C,counts;
@@ -194,6 +220,16 @@ USAGE:
     (2*(num_connected_components - num_unreferenced_vertices) - 
      num_boundary_loops - (euler_characteristic-num_unreferenced_vertices))/2;
 
+  // Topological                                                  
+  printf("%-53s % 12d\n","number of connected components",                   num_connected_components);
+  printf("%-53s % 12d\n","number of unreferenced vertices",                  num_unreferenced_vertices);
+  printf("%-53s % 12d\n","number of handles",                                num_handles);
+  printf("%-53s % 12d\n","Euler characteristic",                             euler_characteristic);
+  printf("%-53s % 12d\n","number of boundary loops",                         num_boundary_loops);
+  printf("%-53s % 12d\n","number of boundary edges",                         num_boundary_edges);
+  printf("%-53s % 12d\n","number of nonmanifold edges",                      num_nonmanifold_edges);
+  printf("%-53s % 12d\n","number of conflictedly oriented edges",            num_conflictingly_oriented_edges);
+
   Eigen::MatrixXi uF;
   unique_simplices(F,uF);
   const int num_combinatorially_duplicate_faces = num_faces - uF.rows();
@@ -203,14 +239,15 @@ USAGE:
      (F.array().col(1)==F.array().col(2)) ||
      (F.array().col(2)==F.array().col(0))).count();
 
+  // Degeneracy                                                  
+  printf("%-53s % 12d\n","number of duplicate vertices",                     num_duplicate_vertices);
+  printf("%-53s % 12d\n","number of combinatorially duplicate faces",        num_combinatorially_duplicate_faces);
+  printf("%-53s % 12d\n","number of geometrically degenerate faces",         num_geometrically_degenerate_faces);
+  printf("%-53s % 12d\n","number of combinatorially degenerate faces",       num_combinatorially_degenerate_faces);
+
   const bool fast = false;
   int num_selfintersecting_pairs = 0;
   int num_intracomponent_selfintersecting_pairs = 0;
-
-  Eigen::RowVector3d centroid;
-  double volume;
-  igl::centroid(V,F,centroid,volume);
-
   if(!fast)
   {
     Eigen::MatrixXd V3 = V;
@@ -241,40 +278,6 @@ USAGE:
 
   }
 
-  // Basic Counts
-  printf("%-53s % 12d\n","number of edges",                                  num_edges);
-  printf("%-53s % 12d\n","number of faces",                                  num_faces);
-  printf("%-53s % 12d\n","number of vertices",                               num_vertices);
-  printf("%-53s % 12d\n","number of dimensions",                             dim);
-  // Sizes                                                  
-  printf("%-53s % 12g\n","bounding box diagonal",                            bbd);
-  printf("%-53s % 12g\n","minimum angle",                                    min_angle);
-  printf("%-53s % 12g\n","maximum angle",                                    max_angle);
-  printf("%-53s % 12g\n","minimum area",                                     min_area);
-  printf("%-53s % 12g\n","maximum area",                                     max_area);
-  printf("%-53s % 12g\n","volume",                                           volume);
-  //printf("%-39s % 3g,% 3g,% 3g\n","centroid",                                centroid(0),centroid(1),centroid(2));
-  printf("%-53s % 12g\n","centroid_x",                                       centroid(0));
-  printf("%-53s % 12g\n","centroid_y",                                       centroid(1));
-  printf("%-53s % 12g\n","centroid_z",                                       centroid(2));
-  // Small things                                                  
-  printf("%-53s % 12d\n","number of small triangles",                        num_small_triangles);
-  printf("%-53s % 12d\n","number of small angles   ",                        num_small_angles);
-  printf("%-53s % 12d\n","number of close vertices",                         num_close_vertices);
-  // Topological                                                  
-  printf("%-53s % 12d\n","number of connected components",                   num_connected_components);
-  printf("%-53s % 12d\n","number of unreferenced vertices",                  num_unreferenced_vertices);
-  printf("%-53s % 12d\n","number of handles",                                num_handles);
-  printf("%-53s % 12d\n","Euler characteristic",                             euler_characteristic);
-  printf("%-53s % 12d\n","number of boundary loops",                         num_boundary_loops);
-  printf("%-53s % 12d\n","number of boundary edges",                         num_boundary_edges);
-  printf("%-53s % 12d\n","number of nonmanifold edges",                      num_nonmanifold_edges);
-  printf("%-53s % 12d\n","number of conflictedly oriented edges",            num_conflictingly_oriented_edges);
-  // Degeneracy                                                  
-  printf("%-53s % 12d\n","number of duplicate vertices",                     num_duplicate_vertices);
-  printf("%-53s % 12d\n","number of combinatorially duplicate faces",        num_combinatorially_duplicate_faces);
-  printf("%-53s % 12d\n","number of geometrically degenerate faces",         num_geometrically_degenerate_faces);
-  printf("%-53s % 12d\n","number of combinatorially degenerate faces",       num_combinatorially_degenerate_faces);
   if(!fast)                                                   
   {                                                  
   printf("%-53s % 12d\n","number of intra-component self-intersecting pairs",num_intracomponent_selfintersecting_pairs);
