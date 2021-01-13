@@ -44,7 +44,7 @@ USAGE:
       Vout,Fout,
       _1,_2,_3);
   }
-  if(!write_triangle_mesh(out,Vout,Fout))
+  if(!xml::write_triangle_mesh(out,Vout,Fout,igl::FileEncoding::Binary))
   {
     return EXIT_FAILURE;
   }

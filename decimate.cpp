@@ -45,6 +45,6 @@ or
     Eigen::VectorXi J,I;
     qslim(V,F,max_m,dV,dF,J,I);
   }
-  return xml::write_triangle_mesh(out,dV,dF,false) ? 
+  return xml::write_triangle_mesh(out,dV,dF,igl::FileEncoding::Binary) ? 
       EXIT_SUCCESS : EXIT_FAILURE;
 }

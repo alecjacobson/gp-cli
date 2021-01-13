@@ -89,7 +89,8 @@ USAGE:
   }else
   {
     return 
-      read_triangle_mesh(in,V,F) && xml::write_triangle_mesh(out,V,F,false) ? 
+      read_triangle_mesh(in,V,F) && 
+      xml::write_triangle_mesh(out,V,F,igl::FileEncoding::Binary) ? 
       EXIT_SUCCESS : EXIT_FAILURE;
   }
 }

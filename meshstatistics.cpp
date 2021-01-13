@@ -5,7 +5,7 @@
 #include <igl/edges.h>
 #include <igl/doublearea.h>
 #include <igl/internal_angles.h>
-#include <igl/all_edges.h>
+#include <igl/oriented_facets.h>
 #include <igl/sort.h>
 #include <igl/sparse.h>
 #include <igl/find.h>
@@ -94,7 +94,7 @@ USAGE:
   edges(F,uE);
   const int num_edges = uE.rows();
   Eigen::MatrixXi E,sortE;
-  all_edges(F,E);
+  oriented_facets(F,E);
   {
     Eigen::MatrixXi _1;
     sort(E,2,true,sortE,_1);

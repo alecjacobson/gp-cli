@@ -82,7 +82,7 @@ For example,
   }
   VectorXi J;
   mesh_boolean(VA,FA,VB,FB,type,VC,FC,J);
-  if(!write_triangle_mesh(C_filename,VC,FC))
+  if(!xml::write_triangle_mesh(C_filename,VC,FC,igl::FileEncoding::Binary))
   {
     cerr<<"Error: couldn't write to "<<C_filename<<endl;
     return EXIT_FAILURE;
