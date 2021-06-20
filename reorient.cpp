@@ -37,6 +37,6 @@ USAGE:
     Eigen::VectorXi I;
     embree::reorient_facets_raycast(V,F,FF,I);
   }
-  return xml::write_triangle_mesh(out,V,FF,false) ? 
+  return xml::write_triangle_mesh(out,V,FF,igl::FileEncoding::Binary) ? 
       EXIT_SUCCESS : EXIT_FAILURE;
 }

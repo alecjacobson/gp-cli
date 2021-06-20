@@ -65,7 +65,11 @@ For example,
     cerr<<"Error: couldn't read "<<A_filename<<endl;
     return EXIT_FAILURE;
   }
-  if(!read_triangle_mesh(B_filename,VB,FB))
+  if(B_filename == "-")
+  {
+    VB.resize(0,3);
+    FB.resize(0,3);
+  }else if(!read_triangle_mesh(B_filename,VB,FB))
   {
     cerr<<"Error: couldn't read "<<B_filename<<endl;
     return EXIT_FAILURE;

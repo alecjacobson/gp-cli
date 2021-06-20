@@ -5,6 +5,7 @@
 #include <igl/readMSH.h>
 #include <igl/readMESH.h>
 #include <igl/writeMESH.h>
+#include <igl/boundary_facets.h>
 #include <igl/pathinfo.h>
 #include <algorithm>
 #include <string>
@@ -56,7 +57,14 @@ USAGE:
         return igl::readMESH(path,V,T,F);
       }else if(e == "msh")
       {
-        return igl::readMSH(path,V,T);
+        Eigen::VectorXi _1,_2;
+        bool res = igl::readMSH(path,V,F,T,_1,_2);
+        if(F.rows() == 0 && T.rows()>0)
+        {
+          igl::boundary_facets(T,F);
+          F = F.rowwise().reverse().eval();
+        }
+        return res;
       }else
       {
         std::cerr<<"Error: "<<
@@ -89,7 +97,8 @@ USAGE:
   }else
   {
     return 
-      read_triangle_mesh(in,V,F) && xml::write_triangle_mesh(out,V,F,false) ? 
-      EXIT_SUCCESS : EXIT_FAILURE;
+      read_triangle_mesh(in,V,F) && 
+      xml::write_triangle_mesh(out,V,F,igl::FileEncoding::Binary) ? 
+        EXIT_SUCCESS : EXIT_FAILURE;
   }
 }

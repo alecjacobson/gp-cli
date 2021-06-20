@@ -37,6 +37,6 @@ USAGE:
     igl::remove_duplicate_vertices( 
       Eigen::MatrixXd(V),Eigen::MatrixXi(F),0,V,_1,_2,F);
   }
-  return xml::write_triangle_mesh(out,V,F,false) ? 
+  return xml::write_triangle_mesh(out,V,F,igl::FileEncoding::Binary) ? 
       EXIT_SUCCESS : EXIT_FAILURE;
 }

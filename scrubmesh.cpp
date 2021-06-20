@@ -2,6 +2,9 @@
 #include <igl/read_triangle_mesh.h>
 #include <igl/opengl/glfw/Viewer.h>
 #include <igl/parallel_for.h>
+#include <igl/get_seconds.h>
+#include <igl/opengl/gl.h>
+#include <GLFW/glfw3.h>
 #include <algorithm>
 #include <string>
 #include <iostream>
@@ -34,34 +37,85 @@ USAGE:
   vector<MatrixXd> Vlist(argc-1,MatrixXd());
   vector<MatrixXi> Flist(argc-1,MatrixXi());
   vector<std::string> filename_list(argc-1);
-  // Read files in parallel
+
+  igl::opengl::glfw::Viewer v;
+  int index = 0;
+  v.core().background_color(0) = 0.8;
+  v.core().background_color(1) = 0.2;
+  v.core().background_color(2) = 0.2;
+  const auto update = [&]()
+  {
+    static bool first = true;
+    if(Vlist[index].size()==0 || Flist[index].size()==0)
+    {
+      v.core().background_color(0) = 0.8;
+      v.core().background_color(1) = 0.2;
+      v.core().background_color(2) = 0.2;
+    }else
+    {
+      v.core().background_color(0) = 0.3;
+      v.core().background_color(1) = 0.3;
+      v.core().background_color(2) = 0.5;
+    }
+    //// .clear() has a bunch of other side-effects (e.g., "resetting"
+    //// face_based, etc.)
+    //v.data().clear();
+    v.data().V.resize(0,3);
+    v.data().F.resize(0,3);
+    v.data().set_mesh(Vlist[index],Flist[index]);
+    v.data().compute_normals();
+    if(first || realign_camera_on_update)
+    {
+      v.core().align_camera_center(Vlist[index],Flist[index]);
+      first = false;
+    }
+    std::cout<<clear_line<<filename_list[index]<< std::flush;
+    last_update_t = igl::get_seconds();
+  };
+
+
+
+  // Read files in parallel in a separate thread
   const int n = argc-1;
+  std::mutex m_outer;
+  std::condition_variable cv;
+  std::mutex m_cout;
+  std::thread io_thread( [&]()
   {
     const double tic = igl::get_seconds();
     int error = EXIT_SUCCESS;
     std::cout<<std::endl;
+    // augh... these get read in out of order...
     igl::parallel_for(n,[&](const int i)
     {
       if(error == EXIT_FAILURE) return;
       const auto & filename = argv[i+1];
-      std::cout<<clear_line<<"\rLoading "<<filename<<"..."<<std::flush;
+      {
+        std::lock_guard<std::mutex> lk(m_cout);
+        std::cout<<clear_line<<"\rLoading "<<filename<<"..."<<std::flush;
+      }
       filename_list[i] = filename;
-      if(!igl::read_triangle_mesh(filename,Vlist[i],Flist[i]))
+      if(igl::read_triangle_mesh(filename,Vlist[i],Flist[i]))
+      {
+        std::lock_guard<std::mutex> lk(m_outer);
+        if(i == index)
+        {
+          // we've read the selected model
+          update();
+          glfwPostEmptyEvent();
+        }
+      }else
       {
         error = EXIT_FAILURE;
       }
     });
     if(error == EXIT_FAILURE)
     {
-      return error;
+      exit(error);
     }
     std::cout<<clear_line<<"\rLoaded "<<n<<" meshes in "<<igl::get_seconds()-tic<<" secs"<<std::endl;
-  }
-  assert(Vlist.size() == n);
-  assert(Flist.size() == n);
-  int index = 0;
+  });
 
-  igl::opengl::glfw::Viewer v;
   std::cout<<R"(scrubmesh
   B,b  toggle whether animation bounces or loops
   R,r  realign camera to center of model on update
@@ -72,25 +126,9 @@ USAGE:
   <    rewind to first frame
 )";
 
-  const auto update = [&]()
-  {
-    //// .clear() has a bunch of other side-effects (e.g., "resetting"
-    //// face_based, etc.)
-    //v.data().clear();
-    v.data().V.resize(0,3);
-    v.data().F.resize(0,3);
-    v.data().set_mesh(Vlist[index],Flist[index]);
-    v.data().compute_normals();
-    if(realign_camera_on_update)
-    {
-      v.core().align_camera_center(Vlist[index],Flist[index]);
-    }
-    std::cout<<clear_line<<filename_list[index]<< std::flush;
-    last_update_t = igl::get_seconds();
-  };
   const auto increment = [&]()
   {
-    index++;
+    index = (index+1)%n;
     update();
   };
   const auto rewind = [&]()
@@ -105,7 +143,7 @@ USAGE:
   };
   const auto decrement = [&]()
   {
-    index--;
+    index = (index-1+n)%n;
     update();
   };
 
@@ -204,8 +242,8 @@ USAGE:
   // Prepare a line so that we can overwrite it with each update
   std::cout<<std::endl;
   //v.core().is_animating = true;
-  update();
   v.launch();
+  io_thread.join();
   // New line so that shell is reset
   std::cout<<std::endl;
   return EXIT_SUCCESS;

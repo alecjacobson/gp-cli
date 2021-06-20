@@ -5,7 +5,6 @@
 #include <igl/edges.h>
 #include <igl/doublearea.h>
 #include <igl/internal_angles.h>
-#include <igl/all_edges.h>
 #include <igl/sort.h>
 #include <igl/sparse.h>
 #include <igl/find.h>
@@ -93,8 +92,12 @@ USAGE:
   Eigen::MatrixXi uE;
   edges(F,uE);
   const int num_edges = uE.rows();
-  Eigen::MatrixXi E,sortE;
-  all_edges(F,E);
+  //all_edges(F,E);
+  Eigen::MatrixXi E = (Eigen::MatrixXi(F.rows()*3,2)<<
+      F.col(1),F.col(2),
+      F.col(2),F.col(0),
+      F.col(0),F.col(1)).finished();
+  Eigen::MatrixXi sortE;
   {
     Eigen::MatrixXi _1;
     sort(E,2,true,sortE,_1);
@@ -228,7 +231,7 @@ USAGE:
   printf("%-53s % 12d\n","number of boundary loops",                         num_boundary_loops);
   printf("%-53s % 12d\n","number of boundary edges",                         num_boundary_edges);
   printf("%-53s % 12d\n","number of nonmanifold edges",                      num_nonmanifold_edges);
-  printf("%-53s % 12d\n","number of conflictedly oriented edges",            num_conflictingly_oriented_edges);
+  printf("%-53s % 12d\n","number of conflictingly oriented edges",            num_conflictingly_oriented_edges);
 
   Eigen::MatrixXi uF;
   unique_simplices(F,uF);
