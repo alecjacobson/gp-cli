@@ -67,7 +67,7 @@ target_link_libraries(scrubmesh igl::core igl::opengl igl::opengl_glfw igl::png)
 list(APPEND BIN_TARGETS "scrubmesh")
 
 add_executable(upright upright.cpp)
-target_link_libraries(upright igl::core igl::opengl_glfw_imgui)
+target_link_libraries(upright igl::core igl::opengl igl::opengl_glfw igl::opengl_glfw_imgui)
 list(APPEND BIN_TARGETS "upright")
 
 add_executable(viewmesh viewmesh.cpp)

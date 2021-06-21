@@ -8,6 +8,8 @@
 #include <igl/oriented_facets.h>
 #include <igl/sort.h>
 #include <igl/sparse.h>
+#include <igl/slice.h>
+#include <igl/unique_simplices.h>
 #include <igl/find.h>
 #include <igl/centroid.h>
 #include <igl/copyleft/cgal/remesh_self_intersections.h>
@@ -21,6 +23,7 @@
 #include <algorithm>
 #include <string>
 #include <cstdio>
+#include <iostream>
 
 int main(int argc, char * argv[])
 {

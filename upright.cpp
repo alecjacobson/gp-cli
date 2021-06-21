@@ -5,12 +5,6 @@
 #include <igl/snap_to_canonical_view_quat.h>
 #include <igl/opengl/glfw/Viewer.h>
 #include <igl/opengl/glfw/imgui/ImGuizmoPlugin.h>
-#include <GLFW/glfw3.h>
-#include <imgui/imgui.h>
-#include <imgui/imgui_internal.h>
-#include <imgui_impl_glfw.h>
-#include <imgui_impl_opengl3.h>
-#include <imguizmo/ImGuizmo.h>
 
 int main(int argc, char *argv[])
 {
