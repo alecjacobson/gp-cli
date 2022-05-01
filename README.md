@@ -121,6 +121,15 @@ Follow the usual cmake build process:
     make
     make install
 
+### To build the precompiled binaries
+
+Just point cmake to install them there, e.g.,:
+
+    cmake ../ -DCMAKE_INSTALL_PREFIX=../precompiled/osx
+    make 
+    make install
+
+
 ## License
 
 Free for academic, non-commercial use. Contact Alec Jacobson
