@@ -4,7 +4,8 @@
 #include <igl/triangulated_grid.h>
 #include <igl/snap_to_canonical_view_quat.h>
 #include <igl/opengl/glfw/Viewer.h>
-#include <igl/opengl/glfw/imgui/ImGuizmoPlugin.h>
+#include <igl/opengl/glfw/imgui/ImGuiPlugin.h>
+#include <igl/opengl/glfw/imgui/ImGuizmoWidget.h>
 
 int main(int argc, char *argv[])
 {
@@ -56,18 +57,21 @@ USAGE:
   vr.selected_data_index = mid;
 
   // Custom menu
-  igl::opengl::glfw::imgui::ImGuizmoPlugin plugin;
+  igl::opengl::glfw::imgui::ImGuiPlugin plugin;
   vr.plugins.push_back(&plugin);
-  plugin.operation = ImGuizmo::ROTATE;
+  igl::opengl::glfw::imgui::ImGuizmoWidget widget;
+  plugin.widgets.push_back(&widget);
+
+  widget.operation = ImGuizmo::ROTATE;
   // Initialize ImGuizmo at mesh centroid
-  plugin.T.block(0,3,3,1) = 
+  widget.T.block(0,3,3,1) = 
     0.5*(V.colwise().maxCoeff() + V.colwise().minCoeff()).transpose().cast<float>();
 
   // Update can be applied relative to this remembered initial transform
-  const Eigen::Matrix4f T0 = plugin.T;
+  const Eigen::Matrix4f T0 = widget.T;
   const auto update = [&]()
   {
-    const Eigen::Matrix4d TT = (plugin.T*T0.inverse()).cast<double>().transpose();
+    const Eigen::Matrix4d TT = (widget.T*T0.inverse()).cast<double>().transpose();
     const Eigen::MatrixXd U = 
       (V.rowwise().homogeneous()*TT).rowwise().hnormalized();
     vr.data_list[mid].set_vertices(U);
@@ -76,7 +80,7 @@ USAGE:
     vr.data_list[fid].set_vertices(FV);
   };
   // Attach callback to apply imguizmo's transform to mesh
-  plugin.callback = [&](const Eigen::Matrix4f & T)
+  widget.callback = [&](const Eigen::Matrix4f & T)
   {
     update();
   };
@@ -93,10 +97,10 @@ USAGE:
   const auto snap = [&]()
   {
     Eigen::Quaternionf qin;
-    qin = Eigen::Matrix3f(plugin.T.block(0,0,3,3));
+    qin = Eigen::Matrix3f(widget.T.block(0,0,3,3));
     Eigen::Quaternionf qout;
     igl::snap_to_canonical_view_quat(qin,1.0,qout);
-    plugin.T.block(0,0,3,3) = qout.toRotationMatrix();
+    widget.T.block(0,0,3,3) = qout.toRotationMatrix();
     update();
   };
   // Maya-style keyboard shortcuts for operation

@@ -33,3 +33,7 @@
 *.swp
 build/*
 *.DS_Store
+
+precompiled/*/include/
+precompiled/*/lib/
+precompiled/*/share/
