@@ -37,3 +37,5 @@ build/*
 precompiled/*/include/
 precompiled/*/lib/
 precompiled/*/share/
+.vs/
+out/
