@@ -5,6 +5,7 @@
 #include <igl/edges.h>
 #include <igl/doublearea.h>
 #include <igl/internal_angles.h>
+#include <igl/is_vertex_manifold.h>
 #include <igl/oriented_facets.h>
 #include <igl/sort.h>
 #include <igl/sparse.h>
@@ -223,6 +224,11 @@ USAGE:
     (2*(num_connected_components - num_unreferenced_vertices) - 
      num_boundary_loops - (euler_characteristic-num_unreferenced_vertices))/2;
 
+
+  Eigen::VectorXi B;
+  igl::is_vertex_manifold(F,B);
+  const int num_nonmanifold_vertices = (!(B.array().cast<bool>())).count();
+
   // Topological                                                  
   printf("%-53s % 12d\n","number of connected components",                   num_connected_components);
   printf("%-53s % 12d\n","number of unreferenced vertices",                  num_unreferenced_vertices);
@@ -231,7 +237,8 @@ USAGE:
   printf("%-53s % 12d\n","number of boundary loops",                         num_boundary_loops);
   printf("%-53s % 12d\n","number of boundary edges",                         num_boundary_edges);
   printf("%-53s % 12d\n","number of nonmanifold edges",                      num_nonmanifold_edges);
-  printf("%-53s % 12d\n","number of conflictingly oriented edges",            num_conflictingly_oriented_edges);
+  printf("%-53s % 12d\n","number of conflictingly oriented edges",           num_conflictingly_oriented_edges);
+  printf("%-53s % 12d\n","number of nonmanifold vertices",                   num_nonmanifold_vertices);
 
   Eigen::MatrixXi uF;
   unique_simplices(F,uF);
