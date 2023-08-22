@@ -4,7 +4,8 @@
 #include <igl/triangulated_grid.h>
 #include <igl/snap_to_canonical_view_quat.h>
 #include <igl/opengl/glfw/Viewer.h>
-#include <igl/opengl/glfw/imgui/ImGuizmoPlugin.h>
+#include <igl/opengl/glfw/imgui/ImGuiPlugin.h>
+#include <igl/opengl/glfw/imgui/ImGuizmoWidget.h>
 
 int main(int argc, char *argv[])
 {
@@ -56,18 +57,24 @@ USAGE:
   vr.selected_data_index = mid;
 
   // Custom menu
-  igl::opengl::glfw::imgui::ImGuizmoPlugin plugin;
-  vr.plugins.push_back(&plugin);
-  plugin.operation = ImGuizmo::ROTATE;
+ 
+  igl::opengl::glfw::imgui::ImGuiPlugin imgui_plugin;
+  vr.plugins.push_back(&imgui_plugin);
+
+  // Add a 3D gizmo plugin
+  igl::opengl::glfw::imgui::ImGuizmoWidget guizmo;
+  imgui_plugin.widgets.push_back(&guizmo);
+
+  guizmo.operation = ImGuizmo::ROTATE;
   // Initialize ImGuizmo at mesh centroid
-  plugin.T.block(0,3,3,1) = 
+  guizmo.T.block(0,3,3,1) = 
     0.5*(V.colwise().maxCoeff() + V.colwise().minCoeff()).transpose().cast<float>();
 
   // Update can be applied relative to this remembered initial transform
-  const Eigen::Matrix4f T0 = plugin.T;
+  const Eigen::Matrix4f T0 = guizmo.T;
   const auto update = [&]()
   {
-    const Eigen::Matrix4d TT = (plugin.T*T0.inverse()).cast<double>().transpose();
+    const Eigen::Matrix4d TT = (guizmo.T*T0.inverse()).cast<double>().transpose();
     const Eigen::MatrixXd U = 
       (V.rowwise().homogeneous()*TT).rowwise().hnormalized();
     vr.data_list[mid].set_vertices(U);
@@ -76,7 +83,7 @@ USAGE:
     vr.data_list[fid].set_vertices(FV);
   };
   // Attach callback to apply imguizmo's transform to mesh
-  plugin.callback = [&](const Eigen::Matrix4f & T)
+  guizmo.callback = [&](const Eigen::Matrix4f & T)
   {
     update();
   };
@@ -93,10 +100,10 @@ USAGE:
   const auto snap = [&]()
   {
     Eigen::Quaternionf qin;
-    qin = Eigen::Matrix3f(plugin.T.block(0,0,3,3));
+    qin = Eigen::Matrix3f(guizmo.T.block(0,0,3,3));
     Eigen::Quaternionf qout;
     igl::snap_to_canonical_view_quat(qin,1.0,qout);
-    plugin.T.block(0,0,3,3) = qout.toRotationMatrix();
+    guizmo.T.block(0,0,3,3) = qout.toRotationMatrix();
     update();
   };
   // Maya-style keyboard shortcuts for operation
