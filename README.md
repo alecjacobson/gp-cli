@@ -29,6 +29,9 @@ stored in `.obj` etc.). E.g.,
 
     mergestl model.{stl,obj}
 
+This will also work on any input mesh format. In reality it is merging
+geometrically duplicate vertices.
+
 ## `meshboolean`
 
 Compute the set union, intersection, difference etc. of two meshes. E.g.,
@@ -96,6 +99,13 @@ or into an `.mp4` using
 **_Hint_**: On shell systems, to interleave two animations from different directories `A/` and `B/` you could use:
 
     scrubmesh `(find A/*.obj | cat -n ; find B/*.obj | cat -n  )  | sort -n  | cut -f2- `
+
+## `splitnonmanifold`
+
+Split non-manifold (or non-orientable) edges and vertices into a
+_combinatorially_ manifold mesh.
+
+    splitnonmanifold input.obj output.obj
 
 ## `viewmesh`
 
