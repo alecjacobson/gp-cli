@@ -18,21 +18,31 @@ int main(int argc, char * argv[])
   MatrixXi F;
   string in,out;
   double f_in = 0.1;
+  int start = 0;
+  bool block_intersections = false;
+  bool use_trivial = false;
   switch(argc)
   {
+    case 5:
+    {
+      std::string flags = argv[start+1];
+      start++;
+      block_intersections = flags.find("b") != std::string::npos;
+      use_trivial = flags.find("t") != std::string::npos;
+    }
     case 4:
-      f_in = atof(argv[1]);
-      in = argv[2];
-      out = argv[3];
+      f_in = atof(argv[start+1]);
+      in =        argv[start+2];
+      out =       argv[start+3];
       break;
     default:
       cerr<<R"(
 USAGE:
-  decimate [fraction] input.[mesh|msh|obj|off|ply|stl|wrl] output.[dae|mesh|obj|off|ply|stl|wrl]
+  decimate [flags|optional] [fraction|whole number] input.[mesh|msh|obj|off|ply|stl|wrl] output.[dae|mesh|obj|off|ply|stl|wrl]
 
-or 
-
-  decimate [whole number] input.[mesh|msh|obj|off|ply|stl|wrl] output.[dae|mesh|obj|off|ply|stl|wrl]
+FLAGS:
+  t  use "trivial" decimation (rather than qslim)
+  b  block edge collapses that would cause new intersections
 
 )";
     return EXIT_FAILURE;
@@ -43,7 +53,13 @@ or
   MatrixXi dF;
   {
     Eigen::VectorXi J,I;
-    qslim(V,F,max_m,dV,dF,J,I);
+    if(use_trivial)
+    {
+      decimate(V,F,max_m,block_intersections,dV,dF,J,I);
+    }else
+    {
+      qslim(V,F,max_m,block_intersections,dV,dF,J,I);
+    }
   }
   return xml::write_triangle_mesh(out,dV,dF,igl::FileEncoding::Binary) ? 
       EXIT_SUCCESS : EXIT_FAILURE;
