@@ -6,7 +6,7 @@ void draw_frame_to_png(
   igl::opengl::glfw::Viewer & v);
 
 // Implementation
-#include <igl/png/writePNG.h>
+#include <igl/stb/write_image.h>
 void draw_frame_to_png(
   const std::string & prefix,
   const int index,
@@ -24,5 +24,5 @@ void draw_frame_to_png(
   // Draw the scene in the buffers
   v.core().draw_buffer(v.data(),false,R,G,B,A);
   // Save it to a PNG
-  igl::png::writePNG(R,G,B,A,png_filename);
+  igl::stb::write_image(png_filename,R,G,B,A);
 }
