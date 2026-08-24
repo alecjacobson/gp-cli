@@ -82,9 +82,22 @@ or
         std::cout<<std::endl;
         return true;
       }
+      case 'N':
+      {
+        // libigl's default N,n only affects the selected mesh; toggle all of
+        // them together instead.
+        static bool pseudonormal = false;
+        pseudonormal ^= 1;
+        for(auto & data : v.data_list)
+        {
+          data.pseudocolor_with_normals = pseudonormal;
+        }
+        return true;
+      }
     }
   };
-  std::cout<<R"(scrubmesh
+  std::cout<<R"(viewmesh
+  N    toggle pseudonormal coloring (normals mapped to rgb) on all meshes
   P,p  write screenshots to ./viewmesh-%06d.png
 )";
   v.launch();
